@@ -22,6 +22,21 @@ RSpec.configure do |config|
   # Remove this line if you're not using ActiveRecord or ActiveRecord fixtures
   config.fixture_path = "#{::Rails.root}/spec/fixtures"
 
+
+  if RUBY_VERSION>='2.6.0'
+    if Rails.version < '5'
+      class ActionController::TestResponse < ActionDispatch::TestResponse
+        def recycle!
+          # hack to avoid MonitorMixin double-initialize error:
+          @mon_mutex_owner_object_id = nil
+          @mon_mutex = nil
+          initialize
+        end
+      end
+    else
+      puts "Monkeypatch for ActionController::TestResponse no longer needed"
+    end
+  end
   # If you're not using ActiveRecord, or you'd prefer not to run each of your
   # examples within a transaction, remove the following line or assign false
   # instead of true.
@@ -46,6 +61,6 @@ RSpec.configure do |config|
   config.after(:each) do
     DatabaseCleaner.clean
   end
-  
+
   config.infer_spec_type_from_file_location!
 end
